@@ -36,14 +36,24 @@ def create_driver():
     return str(driver), 201
 
 
-@app.route('/drivers/driver/?<driver_id>/', methods=['UPDATE'])
-def edit_driver():
-    return "Driver was edited"
+@app.route('/drivers/driver/<driver_id>/', methods=['PATCH'])
+def edit_driver(driver_id):
+    driver = Driver.query.filter_by(id=driver_id).first()
+    driver.firstname = request.args.get('firstname', driver.firstname)
+    driver.lastname = request.args.get('lastname', driver.lastname)
+    driver.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify(f"Driver #{driver.id} was updated.")
 
 
-@app.route('/drivers/driver/?<driver_id>/', methods=['DELETE'])
-def delete_driver():
-    return "Driver was deleted"
+@app.route('/drivers/driver/<driver_id>/', methods=['DELETE'])
+def delete_driver(driver_id):
+    driver = Driver.query.filter_by(id=driver_id).first()
+    db.session.delete(driver)
+    db.session.commit()
+
+    return jsonify(f"Driver #{driver_id} was deleted.")
+
 
 
 @app.route('/vehicles/vehicle/', methods=['GET'])

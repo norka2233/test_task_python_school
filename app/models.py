@@ -15,11 +15,15 @@ class Driver(db.Model):
         return f"{self.id}_{self.firstname}_{self.lastname}"
 
 
-# class Vehicle(db.Model):
-#     id = uuid.uuid4()
-#     driver_id = "driver_id"
-#     make = "VW"
-#     model = "Golf mk7"
-#     plate_number = "AA 1234 OO"
-#     created_at = "car_created at"
-#     updated_at = "car_updated_at"
+class Vehicle(db.Model):
+    __tablename__ = 'Vehicle'
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    driver_id = db.Column(db.Integer, db.ForeignKey('Driver.id'))
+    make = db.Column(db.String(64))
+    model = db.Column(db.String(64))
+    plate_number = db.Column(db.String(10))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow())
+
+    def __repr__(self):
+        return f"{self.id}_{self.make}_{self.model} owned by Driver #{self.driver_id}."

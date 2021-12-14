@@ -3,3 +3,6 @@ venv
 *.xml
 *.pyc
 __pycache__/
+migrations
+
+app.db

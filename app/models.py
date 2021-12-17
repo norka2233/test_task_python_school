@@ -6,6 +6,7 @@ from app import db
 
 class Driver(db.Model):
     __tablename__ = 'Driver'
+
     id = db.Column(db.Integer, primary_key=True) #unique=True)
     firstname = db.Column(db.String(64), index=True, unique=False)
     lastname = db.Column(db.String(64), index=True, unique=False)
@@ -18,6 +19,7 @@ class Driver(db.Model):
 
 class Vehicle(db.Model):
     __tablename__ = 'Vehicle'
+
     id = db.Column(db.Integer, primary_key=True) #unique=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('Driver.id'))
     make = db.Column(db.String(64))

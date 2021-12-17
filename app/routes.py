@@ -7,7 +7,6 @@ from app.helpers import generate_plate
 
 @app.route('/drivers/driver/', methods=['GET'])
 def driver_list():
-
     q = Driver.query
     if request.args.get('created_at__gte'):
         min_bound = datetime.strptime(request.args.get('created_at__gte'), "%d-%m-%Y")
@@ -22,6 +21,7 @@ def driver_list():
         'registered_at': d.registered_at.strftime("%d/%m/%Y %H:%M:%S"),
         'updated_at': d.updated_at.strftime("%d/%m/%Y %H:%M:%S")
     } for d in q.all()]
+
     return jsonify(struct)
 
 
@@ -34,6 +34,7 @@ def create_driver():
     driver = Driver(firstname=first_name, lastname=last_name, registered_at=registered_at, updated_at=updated_at)
     db.session.add(driver)
     db.session.commit()
+
     return str(driver), 201
 
 
@@ -44,6 +45,7 @@ def edit_driver(driver_id):
     driver.lastname = request.args.get('lastname', driver.lastname)
     driver.updated_at = datetime.utcnow()
     db.session.commit()
+
     return jsonify(f"Driver #{driver.id} was updated.")
 
 
@@ -58,8 +60,12 @@ def delete_driver(driver_id):
 
 @app.route('/vehicles/vehicle/', methods=['GET'])
 def vehicle_list():
-
     q = Vehicle.query
+    if request.args.get('with_driver').lower() == 'yes':
+        q = q.filter(Vehicle.driver_id != None)
+    if request.args.get('with_driver').lower() == 'no':
+        q = q.filter(Vehicle.driver_id == None)
+
     struct = [{
         'id': d.id,
         'driver_id': d.driver_id,
@@ -70,13 +76,14 @@ def vehicle_list():
         'updated_at': d.updated_at#.strftime("%d/%m/%Y %H:%M:%S"),
 
     } for d in q.all()]
+
     return jsonify(struct)
 
 
-@app.route('/vehicles/vehicle/')
-def driver(firstname):
-    driver = Driver.query.filter_by(firstname=firstname).first_or_404()
-    return driver
+@app.route('/vehicles/vehicle/<vehicle_id>', methods=['GET'])
+def driver(vehicle_id):
+
+    return Vehicle.query.filter_by(id=vehicle_id).first_or_404()
 
 
 @app.route('/vehicles/vehicle/', methods=['POST'])
@@ -90,17 +97,8 @@ def create_vehicle():
     vehicle = Vehicle(make=make, model=model, plate_number=plate_number, registered_at=registered_at, updated_at=updated_at)
     db.session.add(vehicle)
     db.session.commit()
+
     return str(vehicle), 201
-
-
-@app.route('/vehicles/vehicle/?with_drivers=yes/', methods=['GET'])
-def vehicle_drivers_list():
-    return "Vehicle with Drivers"
-
-
-@app.route('/vehicles/vehicle/?with_drivers=no/', methods=['GET'])
-def vehicle_without_drive_list():
-    return "Vehicle without Drivers"
 
 
 @app.route('/vehicles/vehicle/<vehicle_id>/', methods=['PATCH'])
@@ -109,15 +107,18 @@ def edit_vehicle(vehicle_id):
     vehicle.make = request.args.get('make', vehicle.make)
     vehicle.model = request.args.get('model', vehicle.model)
     vehicle.updated_at = datetime.utcnow()
+    vehicle.driver_id = request.args.get('driver_id')
     db.session.commit()
+
     return jsonify(f"Vehicle #{vehicle.id} was updated")
 
-    return "Vehicle was Edited"
 
-@app.route('/vehicles/vehicle/?<vehicle_id>/', methods=['DELETE'])
-def vehicle_delete():
-    return "Vehicle was Deleted"
+@app.route('/vehicles/vehicle/<vehicle_id>/', methods=['DELETE'])
+def delete_vehicle(vehicle_id):
+    vehicle = Vehicle.query.filter_by(id=vehicle_id).first()
+    db.session.delete(vehicle)
+    db.session.commit()
 
-
+    return jsonify(f"Vehicle #{vehicle_id} was deleted.")
 
 
